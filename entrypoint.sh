@@ -1,10 +1,9 @@
 #!/bin/bash
 set -e
 
-# Input
-BUMP_TYPE=$1
-GITHUB_TOKEN=$2
-BASE_BRANCH=$3
+BUMP_TYPE=${INPUT_BUMP_TYPE}
+GITHUB_TOKEN=${INPUT_GITHUB_TOKEN}
+BASE_BRANCH=${INPUT_BASE_BRANCH}
 
 git config --global user.name "github-actions[bot]"
 git config --global user.email "github-actions[bot]@users.noreply.github.com"
