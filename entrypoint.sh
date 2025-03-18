@@ -53,11 +53,6 @@ echo "Adding and committing changes..."
 git add setup.py pyproject.toml || true
 git commit -m "Bump version to $NEW_VERSION"
 
-# Tagging
-echo "Creating and pushing git tag v$NEW_VERSION..."
-git tag "v$NEW_VERSION"
-git push origin "v$NEW_VERSION"
-
 # Create branch
 BRANCH_NAME="bump-version-to-$NEW_VERSION"
 echo "Creating branch $BRANCH_NAME and pushing..."
