@@ -68,14 +68,12 @@ echo "Creating Pull Request..."
 
 PR_CREATE_CMD="gh pr create --base \"$BASE_BRANCH\" --head \"$BRANCH_NAME\" --title \"Bump version to $NEW_VERSION\" --body \"This PR bumps the version from $CURRENT_VERSION to $NEW_VERSION.\""
 
-# If LABELS is not empty, split by comma and append each label
+# If LABELS is not empty, join labels into a single comma-separated string
 if [ -n "$LABELS" ]; then
-  IFS=',' read -ra LABEL_ARRAY <<< "$LABELS"
-  for label in "${LABEL_ARRAY[@]}"; do
-    PR_CREATE_CMD="$PR_CREATE_CMD --label \"$label\""
-  done
+  LABELS_STRING=$(echo "$LABELS" | tr -d '[:space:]')
+  PR_CREATE_CMD="$PR_CREATE_CMD --label \"$LABELS_STRING\""
 fi
-
+echo "Running PR create command: $PR_CREATE_CMD"
 eval $PR_CREATE_CMD
 
 # Output versions
