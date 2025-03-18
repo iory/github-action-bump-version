@@ -1,20 +1,22 @@
 #!/bin/bash
 set -e
 
-# Read input from environment variables
-BUMP_TYPE=${INPUT_BUMP_TYPE}
-GITHUB_TOKEN=${INPUT_GITHUB_TOKEN}
-BASE_BRANCH=${INPUT_BASE_BRANCH}
+# Read inputs from arguments
+BUMP_TYPE=$1
+GITHUB_TOKEN=$2
+BASE_BRANCH=$3
+LABEL=$4
 
 echo "Bump type: $BUMP_TYPE"
 echo "Base branch: $BASE_BRANCH"
+echo "Label: $LABEL"
 
 # Configure git user
 echo "Configuring git user..."
 git config --global user.name "github-actions[bot]"
 git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-# Mark the directory as safe
+# Mark directory as safe
 echo "Marking directory as safe for git..."
 git config --global --add safe.directory /github/workspace
 
@@ -39,26 +41,26 @@ if [ -z "$CURRENT_VERSION" ] || [ -z "$NEW_VERSION" ]; then
   exit 1
 fi
 
-# Check for changes in relevant files
+# Check for changes
 echo "Checking for changes in version files..."
 if ! git status --porcelain | grep -E "setup.py|pyproject.toml"; then
   echo "No changes to commit"
   exit 0
 fi
 
-# Add and commit version changes
+# Commit changes
 echo "Adding and committing changes..."
 git add setup.py pyproject.toml || true
 git commit -m "Bump version to $NEW_VERSION"
 
-# Tagging and pushing tag
+# Tagging
 echo "Creating and pushing git tag v$NEW_VERSION..."
 git tag "v$NEW_VERSION"
 git push origin "v$NEW_VERSION"
 
-# Create new branch and push
-echo "Creating branch $BRANCH_NAME and pushing..."
+# Create branch
 BRANCH_NAME="bump-version-to-$NEW_VERSION"
+echo "Creating branch $BRANCH_NAME and pushing..."
 git checkout -b "$BRANCH_NAME"
 git push origin "$BRANCH_NAME"
 
@@ -66,11 +68,17 @@ git push origin "$BRANCH_NAME"
 echo "Authenticating gh CLI..."
 echo "$GITHUB_TOKEN" | gh auth login --with-token
 
-# Create Pull Request
+# Create PR (add label if provided)
 echo "Creating Pull Request..."
-gh pr create --base "$BASE_BRANCH" --head "$BRANCH_NAME" --title "Bump version to $NEW_VERSION" --body "This PR bumps the version from $CURRENT_VERSION to $NEW_VERSION."
+PR_CREATE_CMD="gh pr create --base \"$BASE_BRANCH\" --head \"$BRANCH_NAME\" --title \"Bump version to $NEW_VERSION\" --body \"This PR bumps the version from $CURRENT_VERSION to $NEW_VERSION.\""
 
-# Output variables to GitHub Actions environment
+if [ -n "$LABEL" ]; then
+  PR_CREATE_CMD="$PR_CREATE_CMD --label \"$LABEL\""
+fi
+
+eval $PR_CREATE_CMD
+
+# Output versions
 echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
 echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 

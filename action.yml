@@ -12,6 +12,9 @@ inputs:
     description: 'Base branch for the PR'
     required: false
     default: 'main'
+  label:
+    description: 'Label to add to the PR'
+    required: false
 outputs:
   current_version:
     description: 'The version before bumping'
@@ -26,3 +29,4 @@ runs:
     - ${{ inputs.bump_type }}
     - ${{ inputs.github_token }}
     - ${{ inputs.base_branch }}
+    - ${{ inputs.label }}
