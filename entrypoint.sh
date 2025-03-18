@@ -5,11 +5,11 @@ set -e
 BUMP_TYPE=$1
 GITHUB_TOKEN=$2
 BASE_BRANCH=$3
-LABEL=$4
+LABELS=$4
 
 echo "Bump type: $BUMP_TYPE"
 echo "Base branch: $BASE_BRANCH"
-echo "Label: $LABEL"
+echo "Labels: $LABELS"
 
 # Configure git user
 echo "Configuring git user..."
@@ -63,12 +63,17 @@ git push origin "$BRANCH_NAME"
 echo "Authenticating gh CLI..."
 echo "$GITHUB_TOKEN" | gh auth login --with-token
 
-# Create PR (add label if provided)
+# Create PR (add multiple labels if provided)
 echo "Creating Pull Request..."
+
 PR_CREATE_CMD="gh pr create --base \"$BASE_BRANCH\" --head \"$BRANCH_NAME\" --title \"Bump version to $NEW_VERSION\" --body \"This PR bumps the version from $CURRENT_VERSION to $NEW_VERSION.\""
 
-if [ -n "$LABEL" ]; then
-  PR_CREATE_CMD="$PR_CREATE_CMD --label \"$LABEL\""
+# If LABELS is not empty, split by comma and append each label
+if [ -n "$LABELS" ]; then
+  IFS=',' read -ra LABEL_ARRAY <<< "$LABELS"
+  for label in "${LABEL_ARRAY[@]}"; do
+    PR_CREATE_CMD="$PR_CREATE_CMD --label \"$label\""
+  done
 fi
 
 eval $PR_CREATE_CMD
