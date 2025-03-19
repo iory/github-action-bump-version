@@ -50,8 +50,14 @@ fi
 
 # Commit changes
 echo "Adding and committing changes..."
-git add setup.py pyproject.toml || true
-git commit -m "Bump version to $NEW_VERSION"
+[ -f setup.py ] && git add setup.py
+[ -f pyproject.toml ] && git add pyproject.toml
+if ! git diff --cached --quiet; then
+  git commit -m "Bump version to $NEW_VERSION"
+else
+  echo "No changes to commit"
+  exit 1
+fi
 
 # Create branch
 BRANCH_NAME="bump-version-to-$NEW_VERSION"
