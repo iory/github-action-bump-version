@@ -49,6 +49,18 @@ def get_version_from_toml():
         print(f"Error parsing pyproject.toml: {e}")
         return None
 
+def get_version_from_cargo():
+    try:
+        if os.path.exists("Cargo.toml"):
+            with open("Cargo.toml", "r") as f:
+                data = toml.load(f)
+            if "package" in data:
+                return data["package"].get("version")
+        return None
+    except Exception as e:
+        print(f"Error parsing Cargo.toml: {e}")
+        return None
+
 def increment_version(version, increment_type):
     if not version:
         print("No version found to increment.")
@@ -136,21 +148,75 @@ def update_toml_version(new_version):
         print(f"Error updating pyproject.toml: {e}")
         return False
 
+def update_cargo_version(new_version):
+    try:
+        if not os.path.exists("Cargo.toml"):
+            return False
+        with open("Cargo.toml", "r") as f:
+            lines = f.readlines()
+
+        updated = False
+        for i, line in enumerate(lines):
+            if re.match(r"^\s*version\s*=\s*['\"]\d+\.\d+\.\d+['\"]", line.strip()):
+                lines[i] = re.sub(
+                    r"version\s*=\s*['\"]\d+\.\d+\.\d+['\"]",
+                    f"version = \"{new_version}\"",
+                    line
+                )
+                updated = True
+                break
+
+        if not updated:
+            print("Could not find version field in Cargo.toml")
+            return False
+
+        with open("Cargo.toml", "w") as f:
+            f.writelines(lines)
+        print(f"Updated Cargo.toml with version: {new_version}")
+        return True
+    except Exception as e:
+        print(f"Error updating Cargo.toml: {e}")
+        return False
+
 def get_project_version_and_update(increment_type):
-    current_version = get_version_from_toml()
-    if current_version:
-        new_version = increment_version(current_version, increment_type)
-        if new_version and update_toml_version(new_version):
-            return current_version, new_version
+    current_version = None
+    new_version = None
+    updated_files = []
 
-    current_version = get_version_from_setup()
-    if current_version:
-        new_version = increment_version(current_version, increment_type)
-        if new_version and update_setup_version(new_version):
-            return current_version, new_version
+    # Try to get version from any available file
+    for get_func in [get_version_from_toml, get_version_from_setup, get_version_from_cargo]:
+        version = get_func()
+        if version:
+            current_version = version
+            break
 
-    print("No version found in either pyproject.toml or setup.py")
-    return None, None
+    if not current_version:
+        print("No version found in pyproject.toml, setup.py, or Cargo.toml")
+        return None, None
+
+    new_version = increment_version(current_version, increment_type)
+    if not new_version:
+        return None, None
+
+    # Update all available version files
+    if os.path.exists("pyproject.toml") and get_version_from_toml():
+        if update_toml_version(new_version):
+            updated_files.append("pyproject.toml")
+
+    if os.path.exists("setup.py") and get_version_from_setup():
+        if update_setup_version(new_version):
+            updated_files.append("setup.py")
+
+    if os.path.exists("Cargo.toml") and get_version_from_cargo():
+        if update_cargo_version(new_version):
+            updated_files.append("Cargo.toml")
+
+    if not updated_files:
+        print("Failed to update any version files")
+        return None, None
+
+    print(f"Updated version files: {', '.join(updated_files)}")
+    return current_version, new_version
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:

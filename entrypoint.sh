@@ -43,7 +43,7 @@ fi
 
 # Check for changes
 echo "Checking for changes in version files..."
-if ! git status --porcelain | grep -E "setup.py|pyproject.toml"; then
+if ! git status --porcelain | grep -E "setup.py|pyproject.toml|Cargo.toml"; then
   echo "No changes to commit"
   exit 0
 fi
@@ -52,6 +52,7 @@ fi
 echo "Adding and committing changes..."
 [ -f setup.py ] && git add setup.py
 [ -f pyproject.toml ] && git add pyproject.toml
+[ -f Cargo.toml ] && git add Cargo.toml
 if ! git diff --cached --quiet; then
   git commit -m "Bump version to $NEW_VERSION"
 else
