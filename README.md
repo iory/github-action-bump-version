@@ -60,7 +60,7 @@ jobs:
 
       - name: Bump Version
         id: bump
-        uses: iory/github-action-bump-version@v1.0.0
+        uses: iory/github-action-bump-version@v1.1.0
         with:
           bump_type: ${{ github.event.inputs.bump_type }}
           github_token: ${{ secrets.AUTO_MERGE_PAT }}
@@ -80,7 +80,7 @@ To trigger the workflow manually:
 3. Click "Run workflow" and choose the `bump_type` (e.g., `patch`).
 
 This will:
-- Bump the version (e.g., from `1.0.0` to `1.0.1` for a `patch` bump).
+- Bump the version (e.g., from `1.1.0` to `1.1.1` for a `patch` bump).
 - Create a branch (e.g., `bump-version-to-1.0.1`).
 - Commit the changes and push the branch.
 - Open a PR with the specified labels.
